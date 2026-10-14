@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>SILENT PULSE - 23時45分の死角 - | 取調室心理アドベンチャー</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app-wrapper">
+    <!-- スマホフレーム本体 -->
+    <div id="game-container" class="game-container">
+
+      <!-- 画面フラッシュ・シェイク・ビネット等の演出レイヤー -->
+      <div id="flash-overlay" class="flash-overlay"></div>
+      <div id="danger-vignette" class="danger-vignette"></div>
+
+      <!-- 作品切り替えミニタブ（1作目 ⇔ 2作目） -->
+      <nav class="anthology-bar">
+        <span class="anthology-current">vol.1 SILENT PULSE (本格刑事編)</span>
+        <a href="pastel.html" class="anthology-link">vol.2 PASTEL VOID (電脳虚無編) ▶</a>
+      </nav>
+
+      <!-- カットイン演出（「そこまでだ！」「異議あり！」風） -->
+      <div id="cutin-overlay" class="cutin-overlay hidden">
+        <div class="cutin-slash"></div>
+        <div id="cutin-text" class="cutin-text">そこまでだ！</div>
+        <div id="cutin-sub" class="cutin-sub">CONTRADICTION EXPOSED</div>
+      </div>
+
+      <!-- フェーズ移行バナー -->
+      <div id="phase-banner" class="phase-banner hidden">
+        <div class="phase-banner-inner">
+          <div id="phase-banner-num" class="phase-banner-num">PHASE 01</div>
+          <div id="phase-banner-title" class="phase-banner-title">鉄壁のアリバイと空白の5分</div>
+        </div>
+      </div>
+
+      <!-- ==================== 1. タイトル画面 ==================== -->
+      <section id="title-screen" class="screen active">
+        <div class="title-bg">
+          <img src="assets/suspect_calm.jpg" alt="Interrogation Room" class="title-bg-img" />
+          <div class="title-bg-overlay"></div>
+        </div>
+
+        <div class="title-content">
+          <div class="title-badge">PSYCHOLOGICAL INTERROGATION ADV</div>
+          <h1 class="game-title">
+            <span class="title-main">SILENT PULSE</span>
+            <span class="title-jp">― 23時45分の死角 ―</span>
+          </h1>
+
+          <div class="title-ecg-preview">
+            <span class="pulse-dot"></span>
+            <span class="ecg-label">INTERROGATION ROOM No.03 // REC</span>
+          </div>
+
+          <div class="title-story-box">
+            <p>深夜1時15分、警視庁・特別取調室。</p>
+            <p>殺害された主任研究員・佐伯の事件をめぐり、重要参考人であるエリートエンジニア<strong>「神崎 怜」</strong>の取調べが始まる。</p>
+            <p>弁護士到着までの制限時間はわずか。<br><strong>「ゆさぶり（態度選択）」</strong>でボロを出させ、<strong>「証拠品」</strong>で嘘を撃ち抜け。</p>
+          </div>
+
+          <div class="title-actions">
+            <button id="btn-start-game" class="btn-primary-glow">
+              <span class="btn-main-text">取調べを開始する</span>
+              <span class="btn-sub-text">PLAY TIME: 約10分 / SOUND ON推奨</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 2. メイン取調室画面 ==================== -->
+      <section id="main-screen" class="screen">
+        <!-- 最上部ステータスバー：フェーズ・警戒度（GUARD）・心拍モニター（BPM） -->
+        <header class="hud-header">
+          <div class="hud-top-row">
+            <div class="hud-phase-info">
+              <span class="rec-indicator"><span class="rec-dot"></span>REC</span>
+              <span id="hud-phase-label" class="hud-phase-label">PHASE 1/4</span>
+            </div>
+            <div class="hud-controls">
+              <button id="btn-toggle-sound" class="btn-icon" title="サウンド切替">🔊</button>
+              <button id="btn-open-log" class="btn-icon" title="会話ログ">📜 ログ</button>
+            </div>
+          </div>
+
+          <div class="hud-meters-row">
+            <!-- 心拍数モニター (ECG Canvas + BPM) -->
+            <div class="hud-bpm-box" id="hud-bpm-box">
+              <div class="bpm-header">
+                <span class="bpm-title">HEART RATE</span>
+                <span id="SuspectStateTag" class="state-tag calm">冷静</span>
+              </div>
+              <div class="bpm-main">
+                <canvas id="ecg-canvas" width="120" height="32"></canvas>
+                <div class="bpm-readout">
+                  <span id="bpm-value" class="bpm-value">68</span>
+                  <span class="bpm-unit">BPM</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 警戒度（黙秘リスク）＆ 動揺度（ブレイク進捗） -->
+            <div class="hud-gauges-box">
+              <div class="gauge-item">
+                <div class="gauge-label-row">
+                  <span class="gauge-name">警戒度 (黙秘リスク)</span>
+                  <span id="guard-value-text" class="gauge-val">20%</span>
+                </div>
+                <div class="gauge-track">
+                  <div id="guard-bar" class="gauge-fill guard-fill" style="width: 20%;"></div>
+                </div>
+              </div>
+
+              <div class="gauge-item">
+                <div class="gauge-label-row">
+                  <span class="gauge-name">理性の崩壊度</span>
+                  <span id="break-value-text" class="gauge-val">0%</span>
+                </div>
+                <div class="gauge-track">
+                  <div id="break-bar" class="gauge-fill break-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- ビジュアルステージ（取調室＆容疑者ポートレート） -->
+        <div id="visual-stage" class="visual-stage">
+          <div id="portrait-wrapper" class="portrait-wrapper">
+            <img id="suspect-img-calm" src="assets/suspect_calm.jpg" alt="神崎 怜 (冷静)" class="suspect-img active" />
+            <img id="suspect-img-sweat" src="assets/suspect_sweat.jpg" alt="神崎 怜 (動揺)" class="suspect-img" />
+            <img id="suspect-img-shocked" src="assets/suspect_shocked.jpg" alt="神崎 怜 (驚愕)" class="suspect-img" />
+            <img id="suspect-img-confess" src="assets/suspect_confess.jpg" alt="神崎 怜 (観念)" class="suspect-img" />
+          </div>
+          <div class="stage-lighting-overlay"></div>
+
+          <!-- 証言モード時のインジケーター -->
+          <div id="testimony-hud" class="testimony-hud hidden">
+            <div class="testimony-badge">
+              <span class="testimony-icon">⚖️</span>
+              <span id="testimony-title-text">証言中：アリバイの主張</span>
+            </div>
+            <div id="testimony-dots" class="testimony-dots"></div>
+          </div>
+        </div>
+
+        <!-- テキスト＆セリフ領域 -->
+        <div id="dialogue-area" class="dialogue-area">
+          <div class="speaker-bar">
+            <div id="speaker-name" class="speaker-name">神崎 怜</div>
+            <div id="statement-hint" class="statement-hint hidden">矛盾を探せ</div>
+          </div>
+
+          <div id="dialogue-box" class="dialogue-box">
+            <p id="dialogue-text" class="dialogue-text"></p>
+            <div id="next-indicator" class="next-indicator hidden">▼ タップで次へ</div>
+          </div>
+
+          <!-- 証言送りナビゲーション（証言フェーズのみ表示） -->
+          <div id="statement-nav" class="statement-nav hidden">
+            <button id="btn-prev-stmt" class="btn-stmt-nav">◀ 前の発言</button>
+            <span id="stmt-counter" class="stmt-counter">1 / 4</span>
+            <button id="btn-next-stmt" class="btn-stmt-nav">次の発言 ▶</button>
+          </div>
+        </div>
+
+        <!-- 下部アクションコントロールパネル -->
+        <footer id="action-panel" class="action-panel">
+          <!-- 通常会話モード時 -->
+          <div id="normal-controls" class="control-group">
+            <button id="btn-advance" class="btn-advance-full">
+              <span>次へ進む</span>
+              <span class="advance-arrow">▶</span>
+            </button>
+            <button id="btn-view-casefile-normal" class="btn-secondary-compact">
+              📁 捜査資料
+            </button>
+          </div>
+
+          <!-- 証言尋問モード時 -->
+          <div id="interrogation-controls" class="control-group hidden">
+            <button id="btn-press" class="btn-action btn-press">
+              <span class="action-icon">💬</span>
+              <div class="action-labels">
+                <span class="action-main">ゆさぶる</span>
+                <span class="action-sub">態度を選んで深掘り</span>
+              </div>
+            </button>
+
+            <button id="btn-present" class="btn-action btn-present">
+              <span class="action-icon">📄</span>
+              <div class="action-labels">
+                <span class="action-main">つきつける</span>
+                <span class="action-sub">証拠品で矛盾を撃つ</span>
+              </div>
+            </button>
+
+            <button id="btn-hint" class="btn-hint-mini" title="相棒の助言">
+              💡 助言
+            </button>
+          </div>
+
+          <!-- 選択肢モード時（クライマックス心理戦など） -->
+          <div id="choice-controls" class="choice-group hidden"></div>
+        </footer>
+      </section>
+
+      <!-- ==================== 3. 「ゆさぶる」態度（トーン）選択モーダル ==================== -->
+      <div id="tone-modal" class="modal-backdrop hidden">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3>どの態度で「ゆさぶり」をかけますか？</h3>
+            <button id="btn-close-tone" class="btn-close-modal">✕</button>
+          </div>
+          <p class="modal-desc">相手の今の心理状態（心拍数・表情）に合ったアプローチを選ぶとボロを出させやすくなります。</p>
+          <div class="tone-options">
+            <button class="tone-card tone-logic" data-tone="logic">
+              <div class="tone-icon">📘</div>
+              <div class="tone-body">
+                <div class="tone-title">論理的に追及する (LOGIC)</div>
+                <div class="tone-detail">冷静に手順や事実関係の整合性を問い詰める。</div>
+              </div>
+            </button>
+
+            <button class="tone-card tone-empathy" data-tone="empathy">
+              <div class="tone-icon">📗</div>
+              <div class="tone-body">
+                <div class="tone-title">共感して誘導する (EMPATHY)</div>
+                <div class="tone-detail">理解を示すふりをして油断させ、詳細な発言を引き出す。</div>
+              </div>
+            </button>
+
+            <button class="tone-card tone-pressure" data-tone="pressure">
+              <div class="tone-icon">📕</div>
+              <div class="tone-body">
+                <div class="tone-title">威圧して揺さぶる (PRESSURE)</div>
+                <div class="tone-detail">机を叩いて強く迫る。相手が動揺している時に効果絶大。</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 4. 捜査ファイル（証拠品一覧・つきつける）モーダル ==================== -->
+      <div id="evidence-modal" class="modal-backdrop hidden">
+        <div class="modal-sheet evidence-sheet">
+          <div class="modal-header">
+            <h3 id="evidence-modal-title">📁 捜査ファイル・証拠品一覧</h3>
+            <button id="btn-close-evidence" class="btn-close-modal">✕</button>
+          </div>
+
+          <!-- 選択中の発言プレビュー（つきつけるモード時のみ表示） -->
+          <div id="target-stmt-preview" class="target-stmt-preview hidden">
+            <span class="preview-label">対象の発言：</span>
+            <p id="preview-stmt-text" class="preview-stmt-text"></p>
+          </div>
+
+          <div id="evidence-list" class="evidence-list"></div>
+
+          <!-- 選択した証拠品の詳細パネル -->
+          <div id="evidence-detail-box" class="evidence-detail-box">
+            <div class="detail-title-row">
+              <span id="detail-ev-icon" class="detail-ev-icon">📄</span>
+              <h4 id="detail-ev-name">証拠品を選択してください</h4>
+            </div>
+            <p id="detail-ev-desc" class="detail-ev-desc">上のリストから証拠品をタップすると詳細な鑑定結果が表示されます。</p>
+            <div id="detail-ev-note" class="detail-ev-note"></div>
+          </div>
+
+          <div class="evidence-modal-footer">
+            <button id="btn-confirm-present" class="btn-confirm-present hidden">
+              ⚡ この証拠品をつきつける！
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 5. 会話バックログモーダル ==================== -->
+      <div id="log-modal" class="modal-backdrop hidden">
+        <div class="modal-sheet log-sheet">
+          <div class="modal-header">
+            <h3>📜 取調べ記録（バックログ）</h3>
+            <button id="btn-close-log" class="btn-close-modal">✕</button>
+          </div>
+          <div id="log-list" class="log-list"></div>
+        </div>
+      </div>
+
+      <!-- ==================== 6. リザルト / ゲームオーバー画面 ==================== -->
+      <section id="result-screen" class="screen">
+        <div class="result-content">
+          <div id="result-badge" class="result-badge">CASE CLOSED</div>
+          <h2 id="result-title" class="result-title">完全自白</h2>
+          <p id="result-subtitle" class="result-subtitle">神崎 怜のすべての嘘を暴き、真相に到達した。</p>
+
+          <div class="result-stats-card">
+            <div class="stat-row">
+              <span class="stat-label">最終評価ランク</span>
+              <span id="stat-rank" class="stat-value rank-s">S</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">最終警戒度 (ミス回数)</span>
+              <span id="stat-mistakes" class="stat-value">0回</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">最高到達心拍数</span>
+              <span id="stat-max-bpm" class="stat-value">178 BPM</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">クリアタイム</span>
+              <span id="stat-time" class="stat-value">08:42</span>
+            </div>
+          </div>
+
+          <div id="result-summary-text" class="result-summary-text"></div>
+
+          <div class="result-actions">
+            <button id="btn-retry-phase" class="btn-primary-glow hidden">
+              <span>直前のフェーズから再挑戦</span>
+            </button>
+            <button id="btn-restart-game" class="btn-secondary-outline">
+              <span>タイトルへ戻る</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
