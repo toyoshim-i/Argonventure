@@ -1,0 +1,10 @@
+{
+  "name": "Interrogation Anthology: SILENT PULSE & PASTEL VOID",
+  "short_name": "SILENT PULSE",
+  "description": "スマホ縦画面対応・取調室心理アドベンチャー2本立てアンソロジー",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070a0f",
+  "theme_color": "#070a0f"
+}
