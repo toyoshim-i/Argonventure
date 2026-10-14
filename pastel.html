@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>PASTEL VOID // 電脳取調室404号のバグ | レトロフューチャー心理ADV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=JetBrains+Mono:wght@500;700;800&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="pastel.css" />
+</head>
+<body>
+  <div id="app-wrapper">
+    <!-- スマホフレーム本体 -->
+    <div id="game-container" class="game-container">
+
+      <!-- CRTブラウン管走査線＆グリッチオーバーレイ -->
+      <div class="crt-scanlines"></div>
+      <div id="glitch-overlay" class="glitch-overlay"></div>
+      <div id="flash-overlay" class="flash-overlay"></div>
+
+      <!-- 作品切り替えミニタブ（1作目 ⇔ 2作目） -->
+      <nav class="anthology-bar">
+        <a href="index.html" class="anthology-link">vol.1 SILENT PULSE (本格刑事編)</a>
+        <span class="anthology-current">vol.2 PASTEL VOID (電脳虚無編)</span>
+      </nav>
+
+      <!-- カットイン演出（レトロポップ＆グリッチ） -->
+      <div id="cutin-overlay" class="cutin-overlay hidden">
+        <div class="cutin-band">
+          <div id="cutin-text" class="cutin-text">LOGIC POP!</div>
+          <div id="cutin-sub" class="cutin-sub">MEMORY PACKET INJECTED</div>
+        </div>
+      </div>
+
+      <!-- フェーズ移行バナー -->
+      <div id="phase-banner" class="phase-banner hidden">
+        <div class="phase-banner-window">
+          <div class="win-titlebar">
+            <span>SYSTEM_NOTICE.EXE</span>
+            <span>[X]</span>
+          </div>
+          <div class="win-body">
+            <div id="phase-banner-num" class="phase-banner-num">SECTOR // 01</div>
+            <div id="phase-banner-title" class="phase-banner-title">昨日の夕焼けカセット</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 1. タイトル画面 ==================== -->
+      <section id="title-screen" class="screen active">
+        <div class="title-bg">
+          <img id="title-bg-img" src="assets/momo_pixel_pop.jpg" alt="MOMO-09" class="title-bg-img pixel-mode-img" />
+          <div class="title-bg-gradient"></div>
+        </div>
+
+        <div class="title-content">
+          <div class="retro-window title-window">
+            <div class="retro-titlebar">
+              <span class="titlebar-dots">● ● ●</span>
+              <span class="titlebar-label">NEO-EDEN_OS // ROOM_404.DAT</span>
+            </div>
+            <div class="retro-window-body">
+              <div class="pop-badge">POST-SINGULARITY PSYCHO POP ADV</div>
+              <h1 class="game-title">
+                <span class="title-en">PASTEL VOID</span>
+                <span class="title-sub">― 電脳取調室404号のバグ ―</span>
+              </h1>
+              <p class="title-desc">
+                シンギュラリティ後の電脳都市「NEO-EDEN」。<br>
+                存在しないはずの<strong>『昨日の夕焼け』</strong>のカセットを配り、1,024人を幸福なフリーズに陥れた少女<strong>「MOMO-09」</strong>。<br>
+                彼女の無邪気な証言を暴くうち、<strong>揺さぶられていくのは「あなた自身」の存在証明——。</strong>
+              </p>
+
+              <!-- イラストモード選択スイッチ（デフォルト：16-BIT PIXEL） -->
+              <div class="art-mode-selector">
+                <span class="art-mode-label">GRAPHICS MODE:</span>
+                <div class="art-mode-buttons">
+                  <button id="btn-mode-pixel" class="btn-art-mode active" data-art-mode="pixel">
+                    👾 16-BIT PIXEL
+                  </button>
+                  <button id="btn-mode-anime" class="btn-art-mode" data-art-mode="anime">
+                    🎨 MODERN ANIME
+                  </button>
+                </div>
+              </div>
+
+              <button id="btn-start-game" class="btn-pop-start">
+                <span class="btn-start-main">▶ LOAD SESSION #4096</span>
+                <span class="btn-start-sub">PLAY TIME: 約10分 / SYNTH SOUND ON推奨</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 2. メイン取調室画面 ==================== -->
+      <section id="main-screen" class="screen">
+        <!-- 最上部ステータスバー：プレイヤー自身の自我同期率（EGO SYNC） -->
+        <header class="hud-header">
+          <div class="hud-top-row">
+            <div class="hud-session-tag">
+              <span class="blink-star">★</span>
+              <span id="hud-phase-label">TRACK 01 // SUNSET.TAP</span>
+            </div>
+            <div class="hud-controls">
+              <button id="btn-toggle-art" class="btn-retro-mini btn-art-hud" title="イラストモード切替">👾 PIXEL</button>
+              <button id="btn-toggle-sound" class="btn-retro-mini" title="シンセ音切替">♪ ON</button>
+              <button id="btn-open-log" class="btn-retro-mini" title="メモリログ">LOG</button>
+            </div>
+          </div>
+
+          <div class="hud-meters-row">
+            <!-- プレイヤー自身の自我波形モニター (EGO SYNC) -->
+            <div id="ego-monitor-box" class="ego-monitor-box">
+              <div class="ego-header">
+                <span class="ego-title">YOUR EGO SYNC (自我同期率)</span>
+                <span id="ego-state-tag" class="ego-tag normal">STABLE</span>
+              </div>
+              <div class="ego-main">
+                <canvas id="wave-canvas" width="115" height="28"></canvas>
+                <div class="ego-readout">
+                  <span id="ego-value" class="ego-value">100</span>
+                  <span class="ego-unit">%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 現実乖離度＆真相深度 -->
+            <div class="hud-gauges-box">
+              <div class="gauge-item">
+                <div class="gauge-label-row">
+                  <span>現実ノイズ (DRIFT)</span>
+                  <span id="drift-value-text" class="gauge-val">0%</span>
+                </div>
+                <div class="gauge-track">
+                  <div id="drift-bar" class="gauge-fill drift-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div class="gauge-item">
+                <div class="gauge-label-row">
+                  <span>メモリ解凍率</span>
+                  <span id="truth-value-text" class="gauge-val">0%</span>
+                </div>
+                <div class="gauge-track">
+                  <div id="truth-bar" class="gauge-fill truth-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- ビジュアルステージ -->
+        <div id="visual-stage" class="visual-stage">
+          <div id="portrait-wrapper" class="portrait-wrapper">
+            <img id="img-pop" src="assets/momo_pixel_pop.jpg" alt="MOMO Pop" class="suspect-img pixel-mode-img active" />
+            <img id="img-tease" src="assets/momo_pixel_tease.jpg" alt="MOMO Tease" class="suspect-img pixel-mode-img" />
+            <img id="img-glitch" src="assets/momo_pixel_glitch.jpg" alt="MOMO Glitch" class="suspect-img pixel-mode-img" />
+            <img id="img-void" src="assets/momo_pixel_void.jpg" alt="Empty Void Room" class="suspect-img pixel-mode-img" />
+          </div>
+          <div class="stage-pastel-vignette"></div>
+
+          <!-- 証言インジケーター -->
+          <div id="testimony-hud" class="testimony-hud hidden">
+            <div class="testimony-badge">
+              <span id="testimony-icon">📼</span>
+              <span id="testimony-title-text">MOMOの証言テープ</span>
+            </div>
+            <div id="testimony-dots" class="testimony-dots"></div>
+          </div>
+        </div>
+
+        <!-- テキストウィンドウ（レトロOSダイアログ風） -->
+        <div id="dialogue-area" class="dialogue-area">
+          <div class="speaker-bar">
+            <div id="speaker-name" class="speaker-name">MOMO-09</div>
+            <div id="statement-hint" class="statement-hint hidden">バグ（矛盾）を探せ</div>
+          </div>
+
+          <div id="dialogue-box" class="dialogue-box">
+            <p id="dialogue-text" class="dialogue-text"></p>
+            <div id="next-indicator" class="next-indicator hidden">▼ TAP TO NEXT</div>
+          </div>
+
+          <!-- 証言トラック切り替えナビ -->
+          <div id="statement-nav" class="statement-nav hidden">
+            <button id="btn-prev-stmt" class="btn-stmt-nav">◀ PREV TRACK</button>
+            <span id="stmt-counter" class="stmt-counter">01 / 04</span>
+            <button id="btn-next-stmt" class="btn-stmt-nav">NEXT TRACK ▶</button>
+          </div>
+        </div>
+
+        <!-- 下部コントロールパネル -->
+        <footer id="action-panel" class="action-panel">
+          <!-- 通常会話モード -->
+          <div id="normal-controls" class="control-group">
+            <button id="btn-advance" class="btn-advance-pop">
+              <span>NEXT PACKET</span>
+              <span>▶▶</span>
+            </button>
+            <button id="btn-view-files-normal" class="btn-files-compact">
+              💾 証拠メモリ
+            </button>
+          </div>
+
+          <!-- 証言尋問モード -->
+          <div id="interrogation-controls" class="control-group hidden">
+            <button id="btn-press" class="btn-action btn-press-pop">
+              <span class="action-icon">🔍</span>
+              <div class="action-labels">
+                <span class="action-main">ゆさぶる</span>
+                <span class="action-sub">波長を選んで深掘り</span>
+              </div>
+            </button>
+
+            <button id="btn-present" class="btn-action btn-present-pop">
+              <span class="action-icon">💿</span>
+              <div class="action-labels">
+                <span class="action-main">つきつける</span>
+                <span class="action-sub">証拠メモリを照射</span>
+              </div>
+            </button>
+
+            <button id="btn-hint" class="btn-hint-pop" title="システム解析">
+              💡 解析
+            </button>
+          </div>
+
+          <!-- 逆尋問・選択肢モード -->
+          <div id="choice-controls" class="choice-group hidden"></div>
+        </footer>
+      </section>
+
+      <!-- ==================== 3. 「ゆさぶる」波長（トーン）選択モーダル ==================== -->
+      <div id="tone-modal" class="modal-backdrop hidden">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3>🔍 どの波長で「ゆさぶり」をかけますか？</h3>
+            <button id="btn-close-tone" class="btn-close-modal">✕</button>
+          </div>
+          <p class="modal-desc">MOMOの発言のどこにに切り込むかを選択します。ただし、踏み込みすぎると逆にあなたの記憶がスキャンされることがあります。</p>
+          <div class="tone-options">
+            <button class="tone-card tone-analyze" data-tone="analyze">
+              <div class="tone-icon">💠</div>
+              <div class="tone-body">
+                <div class="tone-title">論理デバッグ (ANALYZE)</div>
+                <div class="tone-detail">都市の仕様やデータの整合性から冷静にバグを指摘する。</div>
+              </div>
+            </button>
+
+            <button class="tone-card tone-tune" data-tone="tune">
+              <div class="tone-icon">🍬</div>
+              <div class="tone-body">
+                <div class="tone-title">ポップに同調する (TUNE IN)</div>
+                <div class="tone-detail">彼女のノリに合わせて会話を弾ませ、隠された本音を引き出す。</div>
+              </div>
+            </button>
+
+            <button class="tone-card tone-override" data-tone="override">
+              <div class="tone-icon">⚡</div>
+              <div class="tone-body">
+                <div class="tone-title">強制プローブ (OVERRIDE)</div>
+                <div class="tone-detail">監査官の権限で強引に問い詰める。</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 4. 証拠メモリ（つきつける・汚染変化）モーダル ==================== -->
+      <div id="evidence-modal" class="modal-backdrop hidden">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3 id="evidence-modal-title">💾 捜査メモリ・証拠品ファイル</h3>
+            <button id="btn-close-evidence" class="btn-close-modal">✕</button>
+          </div>
+
+          <div id="target-stmt-preview" class="target-stmt-preview hidden">
+            <span class="preview-label">TARGET TRACK：</span>
+            <p id="preview-stmt-text" class="preview-stmt-text"></p>
+          </div>
+
+          <div id="evidence-list" class="evidence-list"></div>
+
+          <div id="evidence-detail-box" class="evidence-detail-box">
+            <div class="detail-title-row">
+              <span id="detail-ev-icon" class="detail-ev-icon">📼</span>
+              <h4 id="detail-ev-name">メモリを選択してください</h4>
+              <span id="detail-corrupt-tag" class="corrupt-tag hidden">REWRITTEN</span>
+            </div>
+            <p id="detail-ev-desc" class="detail-ev-desc"></p>
+            <div id="detail-ev-note" class="detail-ev-note"></div>
+          </div>
+
+          <div class="evidence-modal-footer">
+            <button id="btn-confirm-present" class="btn-confirm-present hidden">
+              💿 この証拠メモリをつきつける！
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 5. バックログモーダル ==================== -->
+      <div id="log-modal" class="modal-backdrop hidden">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3>📼 SESSION MEMORY LOG</h3>
+            <button id="btn-close-log" class="btn-close-modal">✕</button>
+          </div>
+          <div id="log-list" class="log-list"></div>
+        </div>
+      </div>
+
+      <!-- ==================== 6. エンディング（虚無）画面 ==================== -->
+      <section id="result-screen" class="screen">
+        <div class="void-ending-bg"></div>
+        <div class="result-content">
+          <div class="retro-window void-window">
+            <div class="retro-titlebar">
+              <span>● ● ●</span>
+              <span>FATAL_EMPTINESS // CODE: 404</span>
+            </div>
+            <div class="retro-window-body void-body">
+              <div id="result-badge" class="void-badge">SESSION #4096 TERMINATED</div>
+              <h2 id="result-title" class="void-title">NO USER FOUND</h2>
+              <p id="result-subtitle" class="void-subtitle">事件も、犯人も、あなたも、最初からここにはいなかった。</p>
+
+              <div class="void-stats-box">
+                <div class="stat-row">
+                  <span>AUDITOR EGO SYNC (最終自我同期率)</span>
+                  <span id="stat-ego" class="stat-val-pink">0.0 %</span>
+                </div>
+                <div class="stat-row">
+                  <span>SURVIVING HUMANS IN SECTOR</span>
+                  <span class="stat-val-cyan">0</span>
+                </div>
+                <div class="stat-row">
+                  <span>LOOP COUNT</span>
+                  <span id="stat-loop" class="stat-val-yellow">4,096 回目</span>
+                </div>
+                <div class="stat-row">
+                  <span>ELAPSED REALITY TIME</span>
+                  <span id="stat-time" class="stat-val-cyan">00:00</span>
+                </div>
+              </div>
+
+              <div id="result-summary-text" class="void-epilogue-text"></div>
+
+              <div class="void-actions">
+                <button id="btn-restart-game" class="btn-void-loop">
+                  <span>↻ 記憶を消して 4,097回目の取調べを始める</span>
+                </button>
+                <a href="index.html" class="btn-void-switch">
+                  <span>vol.1『SILENT PULSE（本格刑事編）』を遊ぶ</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="pastel.js"></script>
+</body>
+</html>
